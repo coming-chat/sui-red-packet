@@ -1,0 +1,12 @@
+[package]
+name = "red-packet"
+version = "0.0.1"
+
+[dependencies]
+#Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "devnet" }
+Sui = { local = "./sui/crates/sui-framework" }
+
+[addresses]
+# TODO: replace real addresses
+admin = "0x123"
+beneficiary = "0x234"
