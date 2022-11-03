@@ -8,5 +8,5 @@ Sui = { local = "./sui/crates/sui-framework" }
 
 [addresses]
 # TODO: replace real addresses
-admin = "0x123"
-beneficiary = "0x234"
+admin = "0x82d770bab2d607b919f2dcc45a7491ede65fe6db"
+beneficiary = "0x82d770bab2d607b919f2dcc45a7491ede65fe6db"
