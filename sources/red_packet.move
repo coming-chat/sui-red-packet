@@ -1,22 +1,25 @@
 // Copyright 2022 ComingChat Authors. Licensed under Apache-2.0 License.
 module 0x0::red_packet {
     use std::vector;
+    use std::ascii::into_bytes;
+    use std::type_name::{get, into_string};
     use sui::tx_context::{Self, TxContext};
     use sui::object::{Self, UID, ID};
     use sui::coin::{Self, Coin};
     use sui::balance::{Self, Balance};
-    use sui::pay;
+    use sui::bag::{Self, Bag};
     use sui::transfer;
     use sui::event::emit;
 
     const MAX_COUNT: u64 = 1000;
-    const MIN_BALANCE: u64 = 10000; // 0.0001 APT(decimals=8)
+    const MIN_BALANCE: u64 = 10000; // 0.0001 SUI(decimals=9)
     const INIT_FEE_POINT: u8 = 250; // 2.5%
 
     const EREDPACKET_ACCOUNTS_BALANCES_MISMATCH: u64 = 1;
     const EREDPACKET_INSUFFICIENT_BALANCES: u64 = 2;
     const EREDPACKET_ACCOUNT_TOO_MANY: u64 = 3;
     const EREDPACKET_BALANCE_TOO_LITTLE: u64 = 4;
+    const EREDPACKET_NO_PERMISSIONS: u64 = 5;
 
     const EVENT_TYPE_CREATE: u8 = 0;
     const EVENT_TYPE_OPEN: u8 = 1;
@@ -28,6 +31,7 @@ module 0x0::red_packet {
         beneficiary: address,
         owner: address,
         count: u64,
+        fees: Bag
     }
 
     struct RedPacketInfo<phantom CoinType> has key,store {
@@ -54,6 +58,7 @@ module 0x0::red_packet {
             beneficiary: @beneficiary,
             owner: tx_context::sender(ctx),
             count: 0,
+            fees: bag::new(ctx)
         })
     }
 
@@ -80,8 +85,18 @@ module 0x0::red_packet {
 
         // 2. handle assets
         let (fee, escrow) = calculate_fee(total_balance, INIT_FEE_POINT);
-        // TODO: merge fees?
-        pay::split_and_transfer<CoinType>(coin, fee, config.beneficiary, ctx);
+
+        let fee_balance = coin::into_balance<CoinType>(
+            coin::split<CoinType>(coin, fee, ctx)
+        );
+        let coin_name = into_bytes(into_string(get<CoinType>()));
+        if (bag::contains(&config.fees, coin_name)) {
+            let fee = bag::borrow_mut(&mut config.fees, coin_name);
+            balance::join(fee, fee_balance);
+        } else {
+            bag::add(&mut config.fees, coin_name, fee_balance);
+        };
+
         let escrow_balance = coin::into_balance<CoinType>(
             coin::split<CoinType>(coin, escrow, ctx)
         );
@@ -203,6 +218,30 @@ module 0x0::red_packet {
         emit(close_event)
     }
 
+    public entry fun withdraw<CoinType>(
+        config: &mut Config,
+        ctx: &mut TxContext
+    ) {
+        let operator = tx_context::sender(ctx);
+        assert!(
+            operator == config.beneficiary || operator == config.beneficiary,
+            EREDPACKET_NO_PERMISSIONS
+        );
+
+        let coin_name = into_bytes(into_string(get<CoinType>()));
+
+        if (bag::contains(&config.fees, coin_name)) {
+            let fee = bag::borrow_mut(&mut config.fees, coin_name);
+            let fee_value = balance::value(fee);
+            let fee_coin = coin::from_balance<CoinType>(balance::split(fee, fee_value), ctx);
+
+            transfer::transfer(
+                fee_coin,
+                config.beneficiary
+            );
+        };
+    }
+
     public fun calculate_fee(
         balance: u64,
         fee_point: u8,
@@ -225,6 +264,7 @@ module 0x0::red_packet {
             beneficiary,
             owner: tx_context::sender(ctx),
             count: 0,
+            fees: bag::new(ctx)
         })
     }
 }

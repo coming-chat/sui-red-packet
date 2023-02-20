@@ -1,15 +1,17 @@
 // Copyright 2022 ComingChat Authors. Licensed under Apache-2.0 License.
 #[test_only]
 module 0x0::red_packet_tests {
-    use sui::coin::mint_for_testing;
+    use std::option;
+    use sui::coin::{mint_for_testing, Coin};
     use sui::sui::SUI;
     use sui::coin;
     use sui::test_scenario::{
-        Self, Scenario, next_tx, end, ctx, take_from_sender, return_to_sender
+        Scenario, next_tx, begin, end, ctx, take_from_sender, return_to_sender,
+        take_shared, return_shared, most_recent_id_for_address
     };
 
     use 0x0::red_packet::{
-        init_for_testing, create, open, close, Config, RedPacketInfo
+        init_for_testing, create, open, close, Config, RedPacketInfo, withdraw
     };
 
     // Tests section
@@ -34,6 +36,13 @@ module 0x0::red_packet_tests {
         end(scenario);
     }
 
+    #[test]
+    fun test_withdraw() {
+        let scenario = scenario();
+        test_withdraw_(&mut scenario);
+        end(scenario);
+    }
+
     fun test_create_(test: &mut Scenario) {
         let owner = @0x111;
         let user = @0x222;
@@ -49,7 +58,7 @@ module 0x0::red_packet_tests {
         {
             let sui = mint_for_testing<SUI>(1000000, ctx(test));
 
-            let config = test_scenario::take_shared<Config>(test);
+            let config = take_shared<Config>(test);
 
             create(
                 &mut config,
@@ -60,7 +69,7 @@ module 0x0::red_packet_tests {
             );
 
             coin::destroy_for_testing(sui);
-            test_scenario::return_shared(config);
+            return_shared(config);
         }
     }
 
@@ -79,7 +88,15 @@ module 0x0::red_packet_tests {
                 ctx(test)
             );
             return_to_sender(test, info);
-        }
+        };
+
+        let beneficiary = @0xbbb;
+
+        next_tx(test, beneficiary);
+        {
+            let id_opt = most_recent_id_for_address<Coin<SUI>>(beneficiary);
+            assert!(option::is_none(&id_opt), 1);
+        };
     }
 
     fun test_close_(test: &mut Scenario) {
@@ -96,9 +113,50 @@ module 0x0::red_packet_tests {
                 info,
                 ctx(test)
             );
+        };
+
+        let beneficiary = @0xbbb;
+
+        next_tx(test, beneficiary);
+        {
+            let remain_coin = take_from_sender<Coin<SUI>>(test);
+
+            assert!(coin::value(&remain_coin) == 6750, 2);
+
+            return_to_sender(test, remain_coin);
+        };
+    }
+
+    fun test_withdraw_(test: &mut Scenario) {
+        test_create_(test);
+
+        test_open_(test);
+
+        test_close_(test);
+
+        let beneficiary = @0xbbb;
+
+        next_tx(test, beneficiary);
+        {
+            let config = take_shared<Config>(test);
+
+            withdraw<SUI>(
+                &mut config,
+                ctx(test)
+            );
+            return_shared(config);
+        };
+
+        next_tx(test, beneficiary);
+        {
+            let fee_coin = take_from_sender<Coin<SUI>>(test);
+
+            assert!(coin::value(&fee_coin) == 250, 3);
+
+            return_to_sender(test, fee_coin);
         }
     }
 
     // utilities
-    fun scenario(): Scenario { test_scenario::begin(@0x1) }
+    fun scenario(): Scenario { begin(@0x1) }
 }

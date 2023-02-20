@@ -6,13 +6,13 @@ A red packet social application that combines the privacy chat on ComingChat and
 The code contract will be deployed to the Sui smart contract platform
 
 ### Supported dependencies
-- sui-cli: `Sui devnet v0.14.0 @ 2a9ad74262554d2c753d6eaaa057d6612eab8678`
+- sui-cli: `Sui devnet v0.26.1 @ 83de679c8ad35bada725b66f2eb3293d6aac4b60`
 
 ### Roles and Calls
 - `owner`: `publish`
-- `admin`: `open`, `close`
+- `admin`: `open`, `close`, `withdraw`
 - `user`: `create`
-- `beneficiary`: receive all fee coins.
+- `beneficiary`: `withdraw`, receive all fee coins.
 
 ### Install
 ```bash
@@ -27,7 +27,7 @@ cd sui-red-packet
 # sui
 git clone https://github.com/MystenLabs/sui.git
 cd sui
-git checkout 2a9ad74262554d2c753d6eaaa057d6612eab8678
+git checkout 83de679c8ad35bada725b66f2eb3293d6aac4b60
 
 # sui-red-packet tree
 
@@ -79,4 +79,16 @@ sui client call --gas-budget 1000 \
     --function close \
     --type-args 0x2::sui::SUI \
     --args 0xee61854d42ca06451bad4e4cde31711b658b2ec7
+```
+
+- `withdraw`
+
+```bash
+sui client call --gas-budget 1000 \
+    --package 0x3c538a3e86908e866bb422e36adbde2f32a740b6 \
+    --module red_packet \
+    --function withdraw \
+    --type-args 0x2::sui::SUI \
+    --args 0x7b1ad385b828bb9383d32739f7889baa27d35a42 \
+    --type-args 0x2::sui::SUI
 ```
