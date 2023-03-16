@@ -1,18 +1,21 @@
 // Copyright 2022 ComingChat Authors. Licensed under Apache-2.0 License.
 module 0x0::red_packet {
-    use std::vector;
     use std::ascii::into_bytes;
     use std::type_name::{get, into_string};
-    use sui::tx_context::{Self, TxContext};
-    use sui::object::{Self, UID, ID};
-    use sui::coin::{Self, Coin};
-    use sui::balance::{Self, Balance};
+    use std::vector;
+
     use sui::bag::{Self, Bag};
-    use sui::transfer;
+    use sui::balance::{Self, Balance};
+    use sui::coin::{Self, Coin, value, destroy_zero};
     use sui::event::emit;
+    use sui::object::{Self, UID, ID};
+    use sui::pay::join_vec;
+    use sui::transfer;
+    use sui::tx_context::{Self, TxContext};
 
     const MAX_COUNT: u64 = 1000;
-    const MIN_BALANCE: u64 = 10000; // 0.0001 SUI(decimals=9)
+    const MIN_BALANCE: u64 = 10000;
+    // 0.0001 SUI(decimals=9)
     const INIT_FEE_POINT: u8 = 250; // 2.5%
 
     const EREDPACKET_ACCOUNTS_BALANCES_MISMATCH: u64 = 1;
@@ -64,19 +67,21 @@ module 0x0::red_packet {
 
     public entry fun create<CoinType>(
         config: &mut Config,
-        coin: &mut Coin<CoinType>,
+        coins: vector<Coin<CoinType>>,
         count: u64,
         total_balance: u64,
         ctx: &mut TxContext
     ) {
         // 1. check args
+        let merged_coin = vector::pop_back(&mut coins);
+        join_vec(&mut merged_coin, coins);
+        assert!(
+            coin::value<CoinType>(&merged_coin) >= total_balance,
+            EREDPACKET_INSUFFICIENT_BALANCES
+        );
         assert!(
             total_balance >= MIN_BALANCE,
             EREDPACKET_BALANCE_TOO_LITTLE
-        );
-        assert!(
-            coin::value<CoinType>(coin) >= total_balance,
-            EREDPACKET_INSUFFICIENT_BALANCES
         );
         assert!(
             count <= MAX_COUNT,
@@ -87,7 +92,7 @@ module 0x0::red_packet {
         let (fee, escrow) = calculate_fee(total_balance, INIT_FEE_POINT);
 
         let fee_balance = coin::into_balance<CoinType>(
-            coin::split<CoinType>(coin, fee, ctx)
+            coin::split<CoinType>(&mut merged_coin, fee, ctx)
         );
         let coin_name = into_bytes(into_string(get<CoinType>()));
         if (bag::contains(&config.fees, coin_name)) {
@@ -98,7 +103,7 @@ module 0x0::red_packet {
         };
 
         let escrow_balance = coin::into_balance<CoinType>(
-            coin::split<CoinType>(coin, escrow, ctx)
+            coin::split<CoinType>(&mut merged_coin, escrow, ctx)
         );
 
         // 3. transfer to admin
@@ -114,10 +119,20 @@ module 0x0::red_packet {
             config.admin
         );
 
-        // 4. update count
+        // 4. transfer remain to sender
+        if (value(&merged_coin) > 0) {
+            transfer::transfer(
+                merged_coin,
+                tx_context::sender(ctx)
+            )
+        } else {
+            destroy_zero(merged_coin)
+        };
+
+        // 5. update count
         config.count = config.count + 1;
 
-        // 5. emit event
+        // 6. emit event
         emit(
             RedPacketEvent {
                 id,

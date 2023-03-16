@@ -54,7 +54,7 @@ sui client call --gas-budget 1000 \
     --function create \
     --type-args 0x2::sui::SUI \
     --args 0x7b1ad385b828bb9383d32739f7889baa27d35a42 \
-         0x16c60433f56382aee1ea14eef1324474dd90bcf3 \
+         '["0x16c60433f56382aee1ea14eef1324474dd90bcf3"]' \
          2 \
          10000
 ```

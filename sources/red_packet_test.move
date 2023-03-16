@@ -2,17 +2,12 @@
 #[test_only]
 module 0x0::red_packet_tests {
     use std::option;
-    use sui::coin::{mint_for_testing, Coin};
-    use sui::sui::SUI;
-    use sui::coin;
-    use sui::test_scenario::{
-        Scenario, next_tx, begin, end, ctx, take_from_sender, return_to_sender,
-        take_shared, return_shared, most_recent_id_for_address
-    };
 
-    use 0x0::red_packet::{
-        init_for_testing, create, open, close, Config, RedPacketInfo, withdraw
-    };
+    use sui::coin::{Self, mint_for_testing, Coin, value};
+    use sui::sui::SUI;
+    use sui::test_scenario::{Scenario, next_tx, begin, end, ctx, take_from_sender, return_to_sender, take_shared, return_shared, most_recent_id_for_address};
+
+    use 0x0::red_packet::{init_for_testing, create, open, close, Config, RedPacketInfo, withdraw};
 
     // Tests section
     #[test]
@@ -62,15 +57,23 @@ module 0x0::red_packet_tests {
 
             create(
                 &mut config,
-                &mut sui,
+                vector<Coin<SUI>>[sui],
                 1000,
                 10000,
                 ctx(test)
             );
 
-            coin::destroy_for_testing(sui);
             return_shared(config);
-        }
+        };
+
+        next_tx(test, user);
+        {
+            let remain_coins = take_from_sender<Coin<SUI>>(test);
+
+            assert!(value(&remain_coins) == 1000000 - 10000, 1);
+
+            return_to_sender(test, remain_coins)
+        };
     }
 
     fun test_open_(test: &mut Scenario) {
