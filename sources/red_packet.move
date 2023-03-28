@@ -121,7 +121,7 @@ module 0x0::red_packet {
 
         // 4. transfer remain to sender
         if (value(&merged_coin) > 0) {
-            transfer::transfer(
+            transfer::public_transfer(
                 merged_coin,
                 tx_context::sender(ctx)
             )
@@ -179,7 +179,7 @@ module 0x0::red_packet {
             let account = vector::borrow(&lucky_accounts, i);
             let balance = vector::borrow(&balances, i);
 
-            transfer::transfer(
+            transfer::public_transfer(
                 coin::take(
                     &mut info.remain_coin,
                     *balance, ctx
@@ -223,7 +223,7 @@ module 0x0::red_packet {
             remain_balance: balance::value(&remain_coin),
         };
 
-        transfer::transfer(
+        transfer::public_transfer(
             coin::from_balance(remain_coin, ctx),
             beneficiary
         );
@@ -250,7 +250,7 @@ module 0x0::red_packet {
             let fee_value = balance::value(fee);
             let fee_coin = coin::from_balance<CoinType>(balance::split(fee, fee_value), ctx);
 
-            transfer::transfer(
+            transfer::public_transfer(
                 fee_coin,
                 config.beneficiary
             );

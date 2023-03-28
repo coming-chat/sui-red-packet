@@ -3,10 +3,10 @@ name = "red-packet"
 version = "0.0.1"
 
 [dependencies]
-#Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "devnet" }
-Sui = { local = "../sui/crates/sui-framework" }
+#Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "devnet" }
+Sui = { local = "../sui/crates/sui-framework/packages/sui-framework" }
 
 [addresses]
 # TODO: replace real addresses
-admin = "0x82d770bab2d607b919f2dcc45a7491ede65fe6db"
-beneficiary = "0x82d770bab2d607b919f2dcc45a7491ede65fe6db"
+admin = "0xd5780ffbf267242c899ac04f9300fa4e6506bc338f671076727d4e32cd1a8f8a"
+beneficiary = "0xd5780ffbf267242c899ac04f9300fa4e6506bc338f671076727d4e32cd1a8f8a"
