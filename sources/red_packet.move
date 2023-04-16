@@ -1,5 +1,5 @@
 // Copyright 2022-2023 ComingChat Authors. Licensed under Apache-2.0 License.
-module 0x0::red_packet {
+module rp::red_packet {
     use std::ascii::into_bytes;
     use std::type_name::{get, into_string};
     use std::vector;
@@ -9,9 +9,10 @@ module 0x0::red_packet {
     use sui::coin::{Self, Coin, value, destroy_zero};
     use sui::event::emit;
     use sui::object::{Self, UID, ID};
+    use sui::package;
     use sui::pay::join_vec;
     use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
+    use sui::tx_context::{Self, TxContext, sender};
 
     const MAX_COUNT: u64 = 1000;
     const MIN_BALANCE: u64 = 10000;
@@ -52,17 +53,26 @@ module 0x0::red_packet {
         remain_balance: u64
     }
 
+    /// One-Time-Witness for the module.
+    struct RED_PACKET has drop {}
+
     fun init(
+        otw: RED_PACKET,
         ctx: &mut TxContext
     ) {
-        transfer::share_object(Config{
+        transfer::share_object(Config {
             id: object::new(ctx),
             admin: @admin,
             beneficiary: @beneficiary,
             owner: tx_context::sender(ctx),
             count: 0,
             fees: bag::new(ctx)
-        })
+        });
+
+        // Claim the `Publisher` for the package!
+        let publisher = package::claim(otw, ctx);
+
+        transfer::public_transfer(publisher, sender(ctx));
     }
 
     public entry fun create<CoinType>(
