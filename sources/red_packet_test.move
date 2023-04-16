@@ -1,4 +1,4 @@
-// Copyright 2022 ComingChat Authors. Licensed under Apache-2.0 License.
+// Copyright 2022-2023 ComingChat Authors. Licensed under Apache-2.0 License.
 #[test_only]
 module 0x0::red_packet_tests {
     use std::option;

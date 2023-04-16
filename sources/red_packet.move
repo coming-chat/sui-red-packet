@@ -1,4 +1,4 @@
-// Copyright 2022 ComingChat Authors. Licensed under Apache-2.0 License.
+// Copyright 2022-2023 ComingChat Authors. Licensed under Apache-2.0 License.
 module 0x0::red_packet {
     use std::ascii::into_bytes;
     use std::type_name::{get, into_string};
@@ -182,7 +182,8 @@ module 0x0::red_packet {
             transfer::public_transfer(
                 coin::take(
                     &mut info.remain_coin,
-                    *balance, ctx
+                    *balance,
+                    ctx
                 ),
                 *account
             );
@@ -239,7 +240,7 @@ module 0x0::red_packet {
     ) {
         let operator = tx_context::sender(ctx);
         assert!(
-            operator == config.beneficiary || operator == config.beneficiary,
+            operator == config.admin || operator == config.beneficiary,
             EREDPACKET_NO_PERMISSIONS
         );
 
@@ -248,12 +249,15 @@ module 0x0::red_packet {
         if (bag::contains(&config.fees, coin_name)) {
             let fee = bag::borrow_mut(&mut config.fees, coin_name);
             let fee_value = balance::value(fee);
-            let fee_coin = coin::from_balance<CoinType>(balance::split(fee, fee_value), ctx);
 
-            transfer::public_transfer(
-                fee_coin,
-                config.beneficiary
-            );
+            if (fee_value > 0) {
+                let fee_coin = coin::from_balance<CoinType>(balance::split(fee, fee_value), ctx);
+
+                transfer::public_transfer(
+                    fee_coin,
+                    config.beneficiary
+                );
+            }
         };
     }
 
