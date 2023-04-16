@@ -9,6 +9,8 @@ module 0x0::red_packet_tests {
 
     use 0x0::red_packet::{init_for_testing, create, open, close, Config, RedPacketInfo, withdraw};
 
+    struct USDC has drop {}
+
     // Tests section
     #[test]
     fun test_create() {
@@ -35,6 +37,13 @@ module 0x0::red_packet_tests {
     fun test_withdraw() {
         let scenario = scenario();
         test_withdraw_(&mut scenario);
+        end(scenario);
+    }
+
+    #[test]
+    fun test_usdc_all() {
+        let scenario = scenario();
+        test_usdc_all_(&mut scenario);
         end(scenario);
     }
 
@@ -153,6 +162,80 @@ module 0x0::red_packet_tests {
         next_tx(test, beneficiary);
         {
             let fee_coin = take_from_sender<Coin<SUI>>(test);
+
+            assert!(coin::value(&fee_coin) == 250, 3);
+
+            return_to_sender(test, fee_coin);
+        }
+    }
+
+    fun test_usdc_all_(test: &mut Scenario) {
+        let owner = @0x111;
+        let user = @0x222;
+        let admin = @0xaaa;
+        let beneficiary = @0xbbb;
+
+        next_tx(test, owner);
+        {
+            init_for_testing(ctx(test), admin, beneficiary)
+        };
+
+        // create
+        next_tx(test, user);
+        {
+            let usdc = mint_for_testing<USDC>(1000000, ctx(test));
+
+            let config = take_shared<Config>(test);
+
+            create(
+                &mut config,
+                vector<Coin<USDC>>[usdc],
+                1000,
+                10000,
+                ctx(test)
+            );
+
+            return_shared(config);
+        };
+
+        // open
+        next_tx(test, admin);
+        {
+            let info = take_from_sender<RedPacketInfo<USDC>>(test);
+            open(
+                &mut info,
+                vector<address>[@0x100, @0x200],
+                vector<u64>[1000, 2000],
+                ctx(test)
+            );
+            return_to_sender(test, info);
+        };
+
+        // close
+        next_tx(test, admin);
+        {
+            let info = take_from_sender<RedPacketInfo<USDC>>(test);
+            close(
+                info,
+                ctx(test)
+            );
+        };
+
+        // withdraw
+        next_tx(test, beneficiary);
+        {
+            let config = take_shared<Config>(test);
+
+            withdraw<USDC>(
+                &mut config,
+                ctx(test)
+            );
+            return_shared(config);
+        };
+
+        next_tx(test, beneficiary);
+        {
+            let fee_coin = take_from_sender<Coin<USDC>>(test);
 
             assert!(coin::value(&fee_coin) == 250, 3);
 
