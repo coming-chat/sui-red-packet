@@ -8,6 +8,6 @@ Sui = { local = "../sui/crates/sui-framework/packages/sui-framework" }
 
 [addresses]
 rp = "0x0"
-# TODO: replace real addresses
+# TODO: replace real admin address
 admin = "0xd5780ffbf267242c899ac04f9300fa4e6506bc338f671076727d4e32cd1a8f8a"
-beneficiary = "0xd5780ffbf267242c899ac04f9300fa4e6506bc338f671076727d4e32cd1a8f8a"
+beneficiary = "0xa1d60f68de825850d058427188a33323a39990aaf93f2cbd93885e5073c7dae0"
