@@ -8,6 +8,6 @@ Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-fram
 
 [addresses]
 rp = "0x0"
-admin = "0xd5780ffbf267242c899ac04f9300fa4e6506bc338f671076727d4e32cd1a8f8a"
+admin = "0x0601c61fcc9f18bf529a26b1a676f1e1635bd07d0f123ab2ef4ab4392c139f98"
 beneficiary = "0xa1d60f68de825850d058427188a33323a39990aaf93f2cbd93885e5073c7dae0"
 backup = "0x790059d92b3e1a6247a1363cb998efa01842181d4a85af6dda26718bce7266c5"
