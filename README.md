@@ -6,7 +6,7 @@ A red packet social application that combines the privacy chat on ComingChat and
 The code contract will be deployed to the Sui smart contract platform
 
 ### Supported dependencies
-- sui-cli: `Sui devnet v0.31.2 @ 6bb3186e1656f4ec35a37030aca4287245e37d37`
+- sui-cli: `Sui mainnet @ ae1212baf8f0837e25926d941db3d26a61c1bea2`
 
 ### Roles and Calls
 - `owner`: `publish`

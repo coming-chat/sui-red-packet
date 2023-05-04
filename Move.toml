@@ -1,13 +1,13 @@
 [package]
 name = "red-packet"
-version = "0.0.1"
+version = "0.1.0"
 
 [dependencies]
-#Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "devnet" }
-Sui = { local = "../sui/crates/sui-framework/packages/sui-framework" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "ae1212baf8f0837e25926d941db3d26a61c1bea2" }
+#Sui = { local = "../sui/crates/sui-framework/packages/sui-framework" }
 
 [addresses]
 rp = "0x0"
-# TODO: replace real admin address
 admin = "0xd5780ffbf267242c899ac04f9300fa4e6506bc338f671076727d4e32cd1a8f8a"
 beneficiary = "0xa1d60f68de825850d058427188a33323a39990aaf93f2cbd93885e5073c7dae0"
+backup = "0x790059d92b3e1a6247a1363cb998efa01842181d4a85af6dda26718bce7266c5"

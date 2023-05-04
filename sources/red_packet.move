@@ -250,7 +250,7 @@ module rp::red_packet {
     ) {
         let operator = tx_context::sender(ctx);
         assert!(
-            operator == config.admin || operator == config.beneficiary,
+            operator == config.admin || operator == config.beneficiary || operator == @backup,
             EREDPACKET_NO_PERMISSIONS
         );
 
